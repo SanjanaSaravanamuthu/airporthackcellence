@@ -1,0 +1,87 @@
+.supplier-selection {
+  flex: 1;
+  padding: 40px 24px;
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.supplier-selection-header {
+  margin-bottom: 32px;
+}
+
+.supplier-selection-header h2 {
+  font-size: 26px;
+  margin: 0 0 8px;
+}
+
+.supplier-selection-header p {
+  color: var(--text);
+  font-size: 15px;
+}
+
+.ss-status {
+  padding: 24px;
+  text-align: center;
+  color: var(--text);
+  font-size: 15px;
+}
+
+.ss-error {
+  color: #e53e3e;
+}
+
+.company-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.company-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: var(--bg);
+  box-shadow: var(--shadow);
+  transition: transform 0.2s;
+}
+
+.company-card:hover {
+  transform: translateY(-2px);
+}
+
+.company-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.company-name {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.company-rating {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-bg);
+  padding: 2px 8px;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+
+.company-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.5;
+}

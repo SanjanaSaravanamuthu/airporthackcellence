@@ -1,0 +1,581 @@
+.fs-main {
+  flex: 1;
+  padding: 40px 24px;
+  max-width: 760px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.fs-header h2 {
+  font-size: 26px;
+  margin: 0 0 8px;
+}
+
+.fs-header p {
+  color: var(--text);
+  font-size: 15px;
+  margin: 0;
+}
+
+/* Search form */
+.fs-search-form {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.fs-search-input {
+  flex: 1;
+  min-width: 200px;
+  font-family: var(--mono);
+  font-size: 17px;
+  letter-spacing: 2px;
+}
+
+.fs-error {
+  font-size: 13px;
+  color: #e53e3e;
+  width: 100%;
+}
+
+.fs-error-box {
+  padding: 14px 18px;
+  background: rgba(229, 62, 62, 0.08);
+  border: 1px solid rgba(229, 62, 62, 0.3);
+  border-radius: 8px;
+  color: #c53030;
+  font-size: 14px;
+}
+
+/* Results layout */
+.fs-results {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Flight status card ── */
+.fs-flight-card {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--bg);
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.fs-flight-header {
+  background: var(--accent-bg);
+  border-bottom: 1px solid var(--accent-border);
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.fs-flight-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fs-flight-number {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-h);
+  font-family: var(--mono);
+  letter-spacing: 1px;
+}
+
+.fs-airline {
+  font-size: 13px;
+  color: var(--text);
+}
+
+/* Flight status badge */
+.fs-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.fs-on_time     { background: #f0fff4; color: #276749; border: 1px solid #9ae6b4; }
+.fs-delayed     { background: #fffbeb; color: #b7791f; border: 1px solid #f6e05e; }
+.fs-early       { background: #ebf8ff; color: #2b6cb0; border: 1px solid #90cdf4; }
+.fs-landed      { background: #f0fff4; color: #276749; border: 1px solid #68d391; }
+.fs-cancelled   { background: #fff5f5; color: #c53030; border: 1px solid #feb2b2; }
+.fs-unavailable { background: var(--code-bg); color: var(--text); border: 1px solid var(--border); }
+
+/* Route display */
+.fs-flight-route {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.fs-airport {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-h);
+  font-family: var(--mono);
+  letter-spacing: 1px;
+}
+
+.fs-route-arrow {
+  font-size: 18px;
+  color: var(--accent);
+  flex: 1;
+  text-align: center;
+}
+
+/* Times grid */
+.fs-times-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+  padding: 16px 24px;
+}
+
+/* ── Booking card ── */
+.fs-booking-card {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--bg);
+  box-shadow: var(--shadow);
+}
+
+.fs-booking-header {
+  background: var(--accent-bg);
+  border-bottom: 1px solid var(--accent-border);
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.fs-booking-label {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--accent);
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.fs-booking-number {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-h);
+  font-family: var(--mono);
+  letter-spacing: 2px;
+}
+
+.fs-status-pill {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 4px 12px;
+  border-radius: 10px;
+}
+
+.fs-status-confirmed { background: #f0fff4; color: #276749; }
+.fs-status-cancelled { background: #fff5f5; color: #c53030; }
+.fs-status-open      { background: var(--accent-bg); color: var(--accent); }
+
+/* Sections */
+.fs-section {
+  padding: 18px 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fs-section h4 {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text);
+  font-weight: 600;
+  margin: 0;
+}
+
+.fs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+/* Field */
+.fs-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fs-field-highlight .fs-value {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.fs-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.fs-value {
+  font-size: 14px;
+  color: var(--text-h);
+}
+
+/* Info banners */
+.fs-banner {
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.fs-banner-warning  { background: #fffbeb; border: 1px solid #f6e05e; color: #744210; }
+.fs-banner-info     { background: #ebf8ff; border: 1px solid #90cdf4; color: #2c5282; }
+.fs-banner-error    { background: #fff5f5; border: 1px solid #feb2b2; color: #742a2a; }
+.fs-banner-success  { background: #f0fff4; border: 1px solid #9ae6b4; color: #22543d; }
+
+@media (prefers-color-scheme: dark) {
+  .fs-banner-warning  { background: rgba(246,224,94,0.08);  border-color: rgba(246,224,94,0.3);  color: #f6e05e; }
+  .fs-banner-info     { background: rgba(144,205,244,0.08); border-color: rgba(144,205,244,0.3); color: #90cdf4; }
+  .fs-banner-error    { background: rgba(254,178,178,0.08); border-color: rgba(254,178,178,0.3); color: #feb2b2; }
+  .fs-banner-success  { background: rgba(154,230,180,0.08); border-color: rgba(154,230,180,0.3); color: #9ae6b4; }
+  .fs-on_time     { background: rgba(56,161,105,0.12);  color: #68d391; border-color: rgba(56,161,105,0.3); }
+  .fs-delayed     { background: rgba(246,173,85,0.12);  color: #f6ad55; border-color: rgba(246,173,85,0.3); }
+  .fs-early       { background: rgba(99,179,237,0.12);  color: #63b3ed; border-color: rgba(99,179,237,0.3); }
+  .fs-landed      { background: rgba(56,161,105,0.12);  color: #68d391; border-color: rgba(56,161,105,0.3); }
+  .fs-cancelled   { background: rgba(252,129,129,0.12); color: #fc8181; border-color: rgba(252,129,129,0.3); }
+}
+
+/* Supplier response form */
+.fs-response-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.fs-response-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fs-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.fs-option input[type="radio"] {
+  margin-top: 3px;
+  accent-color: var(--accent);
+  flex-shrink: 0;
+}
+
+.fs-option-active {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.fs-option-danger.fs-option-active {
+  border-color: #e53e3e;
+  background: rgba(229, 62, 62, 0.06);
+}
+
+.fs-option-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.fs-option-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fs-option-text strong {
+  font-size: 14px;
+  color: var(--text-h);
+}
+
+.fs-option-text small {
+  font-size: 12px;
+  color: var(--text);
+}
+
+.fs-note-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fs-form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+/* Supplier response card */
+.fs-response-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+.fs-response-confirmed_revised { border-left: 4px solid #38a169; background: #f0fff4; }
+.fs-response-unavailable       { border-left: 4px solid #e53e3e; background: #fff5f5; }
+
+@media (prefers-color-scheme: dark) {
+  .fs-response-confirmed_revised { background: rgba(56,161,105,0.1); }
+  .fs-response-unavailable       { background: rgba(229,62,62,0.08); }
+}
+
+.fs-response-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.fs-response-note {
+  font-size: 13px;
+  color: var(--text);
+  font-style: italic;
+}
+
+.fs-response-meta {
+  font-size: 12px;
+  color: var(--text);
+}
+
+/* Traveler CR actions */
+.fs-cr-actions {
+  margin-top: 4px;
+}
+
+.fs-cr-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.fs-cr-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Change request history */
+.fs-cr-history {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fs-cr-item {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fs-cr-pending  { border-left: 3px solid var(--accent); }
+.fs-cr-accepted { border-left: 3px solid #38a169; }
+.fs-cr-rejected { border-left: 3px solid #e53e3e; }
+
+.fs-cr-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.fs-cr-type {
+  font-size: 14px;
+  color: var(--text-h);
+  font-weight: 500;
+}
+
+.fs-cr-badge {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.fs-cr-badge-pending  { background: var(--accent-bg); color: var(--accent); }
+.fs-cr-badge-accepted { background: #f0fff4; color: #276749; }
+.fs-cr-badge-rejected { background: #fff5f5; color: #c53030; }
+
+.fs-cr-reason { font-size: 13px; color: #c53030; }
+.fs-cr-meta   { font-size: 12px; color: var(--text); }
+
+/* Simulator */
+.fs-simulator {
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  background: var(--code-bg);
+}
+
+.fs-demo-tag {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: var(--accent-bg);
+  color: var(--accent);
+  padding: 2px 8px;
+  border-radius: 8px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+.fs-sim-hint {
+  font-size: 13px;
+  color: var(--text);
+  margin: 0;
+}
+
+.fs-sim-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.fs-sim-select {
+  flex: 1;
+  min-width: 160px;
+}
+
+.fs-sim-mins {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fs-sim-input {
+  width: 90px;
+}
+
+/* Reuse existing utility classes */
+.form-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text-h);
+  font-size: 15px;
+  font-family: var(--sans);
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.form-input.input-error {
+  border-color: #e53e3e;
+}
+
+.btn-secondary-active {
+  padding: 10px 20px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-h);
+  font-size: 14px;
+  font-family: var(--sans);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-secondary-active:hover {
+  background: var(--accent-bg);
+}
+
+.cr-mode-tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.cr-tab {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+  font-family: var(--sans);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cr-tab-active {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+@media (max-width: 600px) {
+  .fs-main { padding: 24px 16px; }
+  .fs-times-grid,
+  .fs-grid { grid-template-columns: 1fr 1fr; }
+  .fs-flight-number { font-size: 20px; }
+  .fs-airport { font-size: 18px; }
+  .fs-booking-number { font-size: 16px; letter-spacing: 1px; }
+  .fs-sim-row { flex-direction: column; align-items: stretch; }
+  .fs-sim-input { width: 100%; }
+  .fs-form-actions { flex-direction: column; }
+  .fs-form-actions .btn-primary,
+  .fs-form-actions .btn-secondary-active { width: 100%; text-align: center; }
+}

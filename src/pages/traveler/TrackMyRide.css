@@ -1,0 +1,342 @@
+.tr-main {
+  flex: 1;
+  padding: 40px 24px;
+  max-width: 720px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.tr-header h2 {
+  font-size: 26px;
+  margin: 0 0 8px;
+}
+
+.tr-header p {
+  color: var(--text);
+  font-size: 15px;
+  margin: 0;
+}
+
+.tr-form {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.tr-input {
+  flex: 1;
+  min-width: 200px;
+  font-family: var(--mono);
+  font-size: 16px;
+  letter-spacing: 1px;
+}
+
+.tr-error {
+  padding: 14px 18px;
+  background: rgba(229, 62, 62, 0.08);
+  border: 1px solid rgba(229, 62, 62, 0.3);
+  border-radius: 8px;
+  color: #c53030;
+  font-size: 14px;
+}
+
+.tr-results {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Request card */
+.tr-request-card {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--bg);
+  box-shadow: var(--shadow);
+}
+
+.tr-request-header {
+  background: var(--accent-bg);
+  border-bottom: 1px solid var(--accent-border);
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tr-request-id-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tr-id-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.tr-id-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-h);
+  font-family: var(--mono);
+  letter-spacing: 1px;
+}
+
+.tr-section {
+  padding: 20px 24px;
+  border-top: 1px solid var(--border);
+}
+
+.tr-section h4 {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text);
+  font-weight: 600;
+  margin: 0 0 14px;
+}
+
+.tr-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.tr-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tr-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.tr-value {
+  font-size: 14px;
+  color: var(--text-h);
+}
+
+/* Status badge */
+.tr-badge {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 4px 10px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.tr-badge-open     { background: var(--accent-bg); color: var(--accent); }
+.tr-badge-fulfilled { background: #f0fff4; color: #276749; }
+.tr-badge-cancelled { background: #fff5f5; color: #c53030; }
+.tr-badge-booked   { background: #ebf8ff; color: #2b6cb0; }
+.tr-badge-not_chosen { background: var(--code-bg); color: var(--text); }
+.tr-badge-declined { background: #fff5f5; color: #c53030; }
+
+/* Offers section */
+.tr-offers-section h3 {
+  font-size: 18px;
+  margin: 0 0 14px;
+}
+
+.tr-empty {
+  padding: 20px 24px;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  color: var(--text);
+  font-size: 15px;
+  text-align: center;
+}
+
+.tr-offers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.tr-offer-card {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px 20px;
+  background: var(--bg);
+  box-shadow: var(--shadow);
+  border-left: 4px solid var(--border);
+}
+
+.tr-offer-open      { border-left-color: var(--accent); }
+.tr-offer-booked    { border-left-color: #38a169; }
+.tr-offer-not_chosen { border-left-color: var(--border); opacity: 0.7; }
+.tr-offer-declined  { border-left-color: #e53e3e; opacity: 0.65; }
+
+.tr-offer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  gap: 8px;
+}
+
+.tr-offer-company {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.tr-offer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+/* Accept / Decline action row */
+.tr-offer-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.btn-danger {
+  padding: 10px 20px;
+  background: transparent;
+  color: #c53030;
+  border: 1px solid rgba(229, 62, 62, 0.5);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--sans);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-danger:hover {
+  background: rgba(229, 62, 62, 0.08);
+}
+
+.btn-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Inline confirmation dialog overlay */
+.tr-dialog-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.tr-dialog {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 24px;
+  max-width: 340px;
+  width: 90%;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tr-dialog-msg {
+  font-size: 15px;
+  color: var(--text-h);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.tr-dialog-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+/* Booking confirmed banner */
+.tr-confirmed {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 18px 20px;
+  background: #f0fff4;
+  border: 1px solid #9ae6b4;
+  border-radius: 12px;
+  color: #276749;
+}
+
+.tr-confirmed-icon {
+  font-size: 22px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.tr-confirmed strong {
+  font-size: 16px;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.tr-confirmed-sub {
+  font-size: 14px;
+  color: #2f855a;
+}
+
+.tr-confirmed-number {
+  font-family: var(--mono);
+  font-weight: 700;
+  letter-spacing: 1px;
+  font-size: 15px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .tr-confirmed {
+    background: rgba(56, 161, 105, 0.12);
+    border-color: rgba(56, 161, 105, 0.35);
+    color: #68d391;
+  }
+  .tr-confirmed-sub { color: #9ae6b4; }
+}
+
+@media (max-width: 600px) {
+  .tr-main {
+    padding: 24px 16px;
+  }
+  .tr-grid,
+  .tr-offer-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .tr-id-value {
+    font-size: 18px;
+  }
+  .tr-offer-actions {
+    flex-direction: column;
+  }
+  .tr-offer-actions .btn-danger,
+  .tr-offer-actions .btn-primary {
+    width: 100%;
+    text-align: center;
+  }
+}
