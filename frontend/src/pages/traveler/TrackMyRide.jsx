@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { getRequest, getOffers, bookOffer, declineOffer } from '../../api/traveler';
+import { getRequest, getOffers, bookOffer, rejectOffer } from '../../api/traveler';
 import './TrackMyRide.css';
 
 function formatDateTime(iso) {
@@ -168,9 +168,9 @@ export default function TrackMyRide() {
     setActionBusy(offer.id);
     setActionError('');
     try {
-      await declineOffer(offer.id);
+      await rejectOffer(offer.id);
       setOffers((prev) =>
-        prev.map((o) => (o.id === offer.id ? { ...o, status: 'DECLINED' } : o))
+        prev.map((o) => (o.id === offer.id ? { ...o, status: 'REJECTED' } : o))
       );
     } catch (err) {
       setActionError(err.message);

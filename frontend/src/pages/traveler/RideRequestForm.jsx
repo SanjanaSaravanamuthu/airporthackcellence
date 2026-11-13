@@ -1,21 +1,18 @@
 import { useState, useEffect } from 'react';
-import { getFlights, getHotels, getRouteLookup } from '../../api/catalog';
+import { getFlights, getHotelsByAirport, getRouteLookup } from '../../api/catalog';
 import { submitRideRequest } from '../../api/traveler';
 import './RideRequestForm.css';
 
 function formatDateTime(iso) {
   if (!iso) return '';
   const d = new Date(iso);
-  return d.toLocaleString('en-IN', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  });
+  return d.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
 }
 
 function addMinutes(iso, mins) {
   const d = new Date(iso);
   d.setMinutes(d.getMinutes() + mins);
-  const pad = (value) => String(value).padStart(2, '0');
+  const pad = (v) => String(v).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
@@ -25,9 +22,12 @@ function formatCurrency(value) {
 
 export default function RideRequestForm({ onSuccess }) {
   const [flights, setFlights] = useState([]);
-  const [hotels, setHotels] = useState([]);
   const [loadingCatalog, setLoadingCatalog] = useState(true);
   const [catalogError, setCatalogError] = useState('');
+
+  const [hotels, setHotels] = useState([]);
+  const [hotelsLoading, setHotelsLoading] = useState(false);
+  const [hotelsError, setHotelsError] = useState('');
 
   const [flightId, setFlightId] = useState('');
   const [hotelId, setHotelId] = useState('');
@@ -51,16 +51,31 @@ export default function RideRequestForm({ onSuccess }) {
   const [submitError, setSubmitError] = useState('');
 
   useEffect(() => {
-    Promise.all([getFlights(), getHotels()])
-      .then(([f, h]) => {
-        setFlights(f);
-        setHotels(h);
-      })
+    getFlights()
+      .then(setFlights)
       .catch((e) => setCatalogError(e.message))
       .finally(() => setLoadingCatalog(false));
   }, []);
 
   const selectedFlight = flights.find((f) => f.flight_id === flightId);
+
+  // Fetch hotels filtered by airport whenever flight changes
+  useEffect(() => {
+    if (!selectedFlight) {
+      setHotels([]);
+      setHotelId('');
+      setHotelsError('');
+      return;
+    }
+    setHotelsLoading(true);
+    setHotelsError('');
+    setHotelId('');
+    getHotelsByAirport(selectedFlight.to)
+      .then(setHotels)
+      .catch((e) => setHotelsError(e.message))
+      .finally(() => setHotelsLoading(false));
+  }, [selectedFlight]);
+
   const selectedHotel = hotels.find((h) => h.hotel_id === hotelId);
 
   useEffect(() => {
@@ -71,33 +86,19 @@ export default function RideRequestForm({ onSuccess }) {
       setPriceError('');
       return;
     }
-
     setRouteLoading(true);
     setRouteError('');
     setPriceInr('');
     setPriceError('');
-
     getRouteLookup(selectedFlight.to, selectedHotel.city, selectedHotel.area)
-      .then((result) => {
-        setRoute(result);
-      })
-      .catch((e) => {
-        setRoute(null);
-        setRouteError(e.message);
-      })
+      .then(setRoute)
+      .catch((e) => { setRoute(null); setRouteError(e.message); })
       .finally(() => setRouteLoading(false));
   }, [selectedFlight, selectedHotel]);
 
   useEffect(() => {
-    if (!pickupTime || !selectedFlight) {
-      setPickupError('');
-      return;
-    }
-
-    const landing = new Date(selectedFlight.arrival_local);
-    const pickup = new Date(pickupTime);
-    const diffMins = (pickup - landing) / 60000;
-
+    if (!pickupTime || !selectedFlight) { setPickupError(''); return; }
+    const diffMins = (new Date(pickupTime) - new Date(selectedFlight.arrival_local)) / 60000;
     if (diffMins < 60) {
       const earliest = addMinutes(selectedFlight.arrival_local, 60);
       setPickupError(
@@ -109,16 +110,10 @@ export default function RideRequestForm({ onSuccess }) {
   }, [pickupTime, selectedFlight]);
 
   useEffect(() => {
-    if (!priceInr || !route) {
-      setPriceError('');
-      return;
-    }
-
+    if (!priceInr || !route) { setPriceError(''); return; }
     const p = Number(priceInr);
     if (p < route.price_min_inr || p > route.price_max_inr) {
-      setPriceError(
-        `Price must be between ₹${formatCurrency(route.price_min_inr)} and ₹${formatCurrency(route.price_max_inr)}.`
-      );
+      setPriceError(`Price must be between ₹${formatCurrency(route.price_min_inr)} and ₹${formatCurrency(route.price_max_inr)}.`);
     } else {
       setPriceError('');
     }
@@ -135,11 +130,7 @@ export default function RideRequestForm({ onSuccess }) {
   };
 
   const handleChildAge = (index, val) => {
-    setChildAges((prev) => {
-      const next = [...prev];
-      next[index] = val;
-      return next;
-    });
+    setChildAges((prev) => { const next = [...prev]; next[index] = val; return next; });
   };
 
   const isValidChildAges = () => childAges.every((age) => {
@@ -147,40 +138,32 @@ export default function RideRequestForm({ onSuccess }) {
     return age !== '' && Number.isFinite(num) && num >= 0 && num <= 17;
   });
 
-  const isFormValid = () => {
-    if (!travelerName.trim()) return false;
-    if (!flightId || !hotelId) return false;
-    if (Number(adults) < 1) return false;
-    if (Number(children) < 0) return false;
-    if (!isValidChildAges()) return false;
-    if (Number(largeBags) < 0 || Number(smallBags) < 0) return false;
-    if (pickupError) return false;
-    if (!route) return false;
-    if (!priceInr || priceError) return false;
-    return true;
-  };
+  const isFormValid = () =>
+    travelerName.trim() &&
+    flightId && hotelId &&
+    Number(adults) >= 1 &&
+    Number(children) >= 0 &&
+    isValidChildAges() &&
+    Number(largeBags) >= 0 && Number(smallBags) >= 0 &&
+    !pickupError && route && priceInr && !priceError;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isFormValid() || submitting) return;
-
     setSubmitting(true);
     setSubmitError('');
-
-    const payload = {
-      traveler_name: travelerName.trim(),
-      flight_id: flightId,
-      hotel_id: hotelId,
-      adults: Number(adults),
-      child_ages: childAges.map((age) => Number(age)),
-      large_bags: Number(largeBags),
-      small_bags: Number(smallBags),
-      pickup_time: pickupTime ? `${pickupTime}:00` : null,
-      price_inr: Number(priceInr),
-    };
-
     try {
-      const result = await submitRideRequest(payload);
+      const result = await submitRideRequest({
+        traveler_name: travelerName.trim(),
+        flight_id: flightId,
+        hotel_id: hotelId,
+        adults: Number(adults),
+        child_ages: childAges.map(Number),
+        large_bags: Number(largeBags),
+        small_bags: Number(smallBags),
+        pickup_time: pickupTime ? `${pickupTime}:00` : null,
+        price_inr: Number(priceInr),
+      });
       onSuccess(result);
     } catch (e) {
       setSubmitError(e.message);
@@ -189,7 +172,7 @@ export default function RideRequestForm({ onSuccess }) {
     }
   };
 
-  if (loadingCatalog) return <div className="form-status">Loading flight and hotel data…</div>;
+  if (loadingCatalog) return <div className="form-status">Loading flight data…</div>;
 
   const minPickup = selectedFlight ? addMinutes(selectedFlight.arrival_local, 60) : '';
 
@@ -209,9 +192,7 @@ export default function RideRequestForm({ onSuccess }) {
       </section>
 
       {catalogError && (
-        <div className="form-error submit-error">
-          ⚠ Backend unavailable: {catalogError}
-        </div>
+        <div className="form-error submit-error">⚠ Backend unavailable: {catalogError}</div>
       )}
 
       <section className="form-section">
@@ -219,10 +200,7 @@ export default function RideRequestForm({ onSuccess }) {
         <select
           className="form-input"
           value={flightId}
-          onChange={(e) => {
-            setFlightId(e.target.value);
-            setPickupTime('');
-          }}
+          onChange={(e) => { setFlightId(e.target.value); setPickupTime(''); }}
         >
           <option value="">Select a flight</option>
           {flights.map((flight) => (
@@ -240,28 +218,40 @@ export default function RideRequestForm({ onSuccess }) {
 
       <section className="form-section">
         <h3>Hotel selection</h3>
-        <select
-          className="form-input"
-          value={hotelId}
-          onChange={(e) => setHotelId(e.target.value)}
-        >
-          <option value="">Select a hotel</option>
-          {hotels.map((hotel) => (
-            <option key={hotel.hotel_id} value={hotel.hotel_id}>
-              {hotel.name} · {hotel.city} · {hotel.area}
-              {hotel.hotel_id ? ` · ID ${hotel.hotel_id}` : ''}
-            </option>
-          ))}
-        </select>
+        {!flightId && (
+          <div className="form-hint">Select a flight first to see available hotels.</div>
+        )}
+        {flightId && hotelsLoading && (
+          <div className="form-hint">Loading hotels for {selectedFlight?.to}…</div>
+        )}
+        {flightId && hotelsError && (
+          <div className="form-error">{hotelsError}</div>
+        )}
+        {flightId && !hotelsLoading && !hotelsError && hotels.length === 0 && (
+          <div className="form-hint">No hotels available for this airport.</div>
+        )}
+        {flightId && !hotelsLoading && hotels.length > 0 && (
+          <select
+            className="form-input"
+            value={hotelId}
+            onChange={(e) => setHotelId(e.target.value)}
+          >
+            <option value="">Select a hotel</option>
+            {hotels.map((hotel) => (
+              <option key={hotel.hotel_id} value={hotel.hotel_id}>
+                {hotel.name} · {hotel.city} · {hotel.area}
+              </option>
+            ))}
+          </select>
+        )}
         {selectedHotel && (
           <div className="form-hint">
             {selectedHotel.name} · {selectedHotel.city} · {selectedHotel.area}
-            {selectedHotel.hotel_id ? ` · ID ${selectedHotel.hotel_id}` : ''}
           </div>
         )}
       </section>
 
-      {(flightId && hotelId) && (
+      {flightId && hotelId && (
         <section className="form-section">
           {routeLoading && <div className="form-hint">Loading suggested route price range…</div>}
           {routeError && <div className="form-error">{routeError}</div>}

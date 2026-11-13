@@ -148,6 +148,7 @@
 .tr-badge-booked   { background: #ebf8ff; color: #2b6cb0; }
 .tr-badge-not_chosen { background: var(--code-bg); color: var(--text); }
 .tr-badge-declined { background: #fff5f5; color: #c53030; }
+.tr-badge-rejected { background: #fff5f5; color: #c53030; }
 
 /* Offers section */
 .tr-offers-section h3 {
@@ -184,6 +185,7 @@
 .tr-offer-booked    { border-left-color: #38a169; }
 .tr-offer-not_chosen { border-left-color: var(--border); opacity: 0.7; }
 .tr-offer-declined  { border-left-color: #e53e3e; opacity: 0.65; }
+.tr-offer-rejected  { border-left-color: #e53e3e; opacity: 0.65; }
 
 .tr-offer-header {
   display: flex;

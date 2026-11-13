@@ -3,15 +3,15 @@ import {
   MOCK_COMPANIES, MOCK_OPEN_REQUESTS,
 } from './mockData';
 
-const BASE_URL = 'http://localhost:8080/api/v1';
+const BASE_URL = '/api/v1'; // proxied by Vite in dev; same-origin in prod
 
-// In-memory store for mock submitted requests, offers and bookings
+// ─── Mock stores ─────────────────────────────────────────────────────────────
 const mockRequests = [...MOCK_OPEN_REQUESTS];
 const mockOffers = [];
 const mockBookings = [];
 const mockChangeRequests = [];
-const mockFlightStatuses = {}; // flightId -> status object
-const mockFlightStatusResponses = {}; // bookingId -> supplier response object
+const mockFlightStatuses = {};
+const mockFlightStatusResponses = {};
 let offerIdCounter = 1;
 let bookingIdCounter = 1;
 let changeRequestIdCounter = 1;
@@ -37,11 +37,12 @@ function getOrInitFlightStatus(flightId) {
   return mockFlightStatuses[flightId];
 }
 
+// ─── Mock router ─────────────────────────────────────────────────────────────
 function mockResponse(path, options = {}) {
   const method = options.method || 'GET';
   const body = options.body ? JSON.parse(options.body) : null;
 
-  // POST /bookings/:bookingId/change-requests
+  // POST /bookings/:id/change-requests
   if (method === 'POST' && path.includes('/bookings/') && path.endsWith('/change-requests')) {
     const bookingId = parseInt(path.split('/bookings/')[1].split('/')[0]);
     const booking = mockBookings.find((b) => b.id === bookingId);
@@ -72,7 +73,7 @@ function mockResponse(path, options = {}) {
     return cr;
   }
 
-  // GET /bookings/:bookingId/change-requests
+  // GET /bookings/:id/change-requests
   if (method === 'GET' && path.includes('/bookings/') && path.endsWith('/change-requests')) {
     const bookingId = parseInt(path.split('/bookings/')[1].split('/')[0]);
     return mockChangeRequests.filter((c) => c.booking_id === bookingId);
@@ -82,12 +83,10 @@ function mockResponse(path, options = {}) {
   if (method === 'GET' && path.includes('/suppliers/') && path.endsWith('/change-requests')) {
     const companyId = decodeURIComponent(path.split('/suppliers/')[1].split('/')[0]);
     const companyBookings = mockBookings.filter((b) => b.company_id === companyId);
-    return mockChangeRequests.filter((cr) =>
-      companyBookings.some((b) => b.id === cr.booking_id)
-    );
+    return mockChangeRequests.filter((cr) => companyBookings.some((b) => b.id === cr.booking_id));
   }
 
-  // PATCH /bookings/change-requests/:changeRequestId
+  // PATCH /bookings/change-requests/:id
   if (method === 'PATCH' && path.includes('/bookings/change-requests/')) {
     const crId = parseInt(path.split('/bookings/change-requests/')[1]);
     const cr = mockChangeRequests.find((c) => c.id === crId);
@@ -129,29 +128,27 @@ function mockResponse(path, options = {}) {
     if (body.status && FLIGHT_STATUS_VALUES.includes(body.status)) status.status = body.status;
     if (body.estimated_arrival) status.estimated_arrival = body.estimated_arrival;
     status.updated_at = new Date().toISOString().slice(0, 19);
-    // Compute updated pickup: 60 min after estimated arrival
-    const bookingsForFlight = mockBookings.filter((b) => b.flight_id === flightId);
-    bookingsForFlight.forEach((b) => {
-      if (b.status === 'CONFIRMED') {
-        const eta = new Date(status.estimated_arrival);
-        eta.setMinutes(eta.getMinutes() + 60);
-        b._suggested_pickup = eta.toISOString().slice(0, 19);
-      }
+    mockBookings.filter((b) => b.flight_id === flightId && b.status === 'CONFIRMED').forEach((b) => {
+      const eta = new Date(status.estimated_arrival);
+      eta.setMinutes(eta.getMinutes() + 60);
+      b._suggested_pickup = eta.toISOString().slice(0, 19);
     });
     return status;
   }
 
-  // GET /bookings/:bookingId/flight-status-notification
+  // GET /bookings/:id/flight-status-notification
   if (method === 'GET' && path.includes('/bookings/') && path.endsWith('/flight-status-notification')) {
     const bookingId = parseInt(path.split('/bookings/')[1].split('/')[0]);
     const booking = mockBookings.find((b) => b.id === bookingId);
     if (!booking) throw Object.assign(new Error('Booking not found.'), { status: 404 });
-    const flightStatus = getOrInitFlightStatus(booking.flight_id);
-    const response = mockFlightStatusResponses[bookingId] || null;
-    return { flight_status: flightStatus, supplier_response: response, suggested_pickup: booking._suggested_pickup || null };
+    return {
+      flight_status: getOrInitFlightStatus(booking.flight_id),
+      supplier_response: mockFlightStatusResponses[bookingId] || null,
+      suggested_pickup: booking._suggested_pickup || null,
+    };
   }
 
-  // POST /bookings/:bookingId/flight-status-response
+  // POST /bookings/:id/flight-status-response
   if (method === 'POST' && path.includes('/bookings/') && path.endsWith('/flight-status-response')) {
     const bookingId = parseInt(path.split('/bookings/')[1].split('/')[0]);
     const booking = mockBookings.find((b) => b.id === bookingId);
@@ -181,7 +178,7 @@ function mockResponse(path, options = {}) {
     return booking;
   }
 
-  // GET /traveler/requests/:requestId
+  // GET /traveler/requests/:requestId  (must come before /offers check)
   if (method === 'GET' && path.includes('/traveler/requests/') && !path.endsWith('/offers')) {
     const requestId = path.split('/traveler/requests/')[1];
     const req = mockRequests.find((r) => r.request_id === requestId);
@@ -195,13 +192,13 @@ function mockResponse(path, options = {}) {
     return mockOffers.filter((o) => o.request_id === requestId);
   }
 
-  // POST /traveler/offers/:offerId/decline
-  if (method === 'POST' && path.includes('/traveler/offers/') && path.endsWith('/decline')) {
+  // POST /traveler/offers/:offerId/reject
+  if (method === 'POST' && path.includes('/traveler/offers/') && path.endsWith('/reject')) {
     const offerId = parseInt(path.split('/traveler/offers/')[1].split('/')[0]);
     const offer = mockOffers.find((o) => o.id === offerId);
     if (!offer) throw Object.assign(new Error('Offer not found.'), { status: 404 });
     if (offer.status !== 'OPEN') throw Object.assign(new Error('Offer is no longer available.'), { status: 400 });
-    offer.status = 'DECLINED';
+    offer.status = 'REJECTED';
     return offer;
   }
 
@@ -234,7 +231,6 @@ function mockResponse(path, options = {}) {
       status: 'CONFIRMED',
       is_pre_booked: false,
       created_at: new Date().toISOString().slice(0, 19),
-      // enriched for summary display
       _flight: flight,
       _hotel: hotel,
       _vehicle_type: offer.vehicle_type,
@@ -247,7 +243,8 @@ function mockResponse(path, options = {}) {
     };
     mockBookings.push(booking);
     offer.status = 'BOOKED';
-    mockOffers.filter((o) => o.request_id === offer.request_id && o.id !== offerId)
+    mockOffers
+      .filter((o) => o.request_id === offer.request_id && o.id !== offerId)
       .forEach((o) => { o.status = 'NOT_CHOSEN'; });
     request.status = 'FULFILLED';
     return booking;
@@ -262,7 +259,7 @@ function mockResponse(path, options = {}) {
   // GET /catalog/companies
   if (method === 'GET' && path === '/catalog/companies') return MOCK_COMPANIES;
 
-  // GET /catalog/routes/lookup?airport=X&city=Y&area=Z
+  // GET /catalog/routes/lookup
   if (method === 'GET' && path.startsWith('/catalog/routes/lookup')) {
     const params = new URLSearchParams(path.split('?')[1]);
     const route = MOCK_ROUTES.find(
@@ -279,16 +276,14 @@ function mockResponse(path, options = {}) {
     const companyId = path.split('/suppliers/')[1].split('/')[0];
     const company = MOCK_COMPANIES.find((c) => c.company_id === companyId);
     if (!company) throw Object.assign(new Error('Company not found.'), { status: 404 });
-
     return mockRequests
       .filter((r) => r.status === 'OPEN')
       .map((r) => {
         const flight = MOCK_FLIGHTS.find((f) => f.flight_id === r.flight_id);
         const hotel = MOCK_HOTELS.find((h) => h.hotel_id === r.hotel_id);
         if (!flight || !hotel) return null;
-        const servesAirport = company.airports.includes(flight.to);
-        const servesArea = company.areas.some((a) => a.city === hotel.city && a.area === hotel.area);
-        if (!servesAirport || !servesArea) return null;
+        if (!company.airports.includes(flight.to)) return null;
+        if (!company.areas.some((a) => a.city === hotel.city && a.area === hotel.area)) return null;
         const route = MOCK_ROUTES.find((ro) => ro.airport === flight.to && ro.city === hotel.city && ro.area === hotel.area);
         const eligibleVehicles = company.vehicles.filter(
           (v) => v.seats >= r.adults + r.child_ages.length &&
@@ -315,16 +310,16 @@ function mockResponse(path, options = {}) {
     if (!flight) throw Object.assign(new Error('Flight not found.'), { rule: 'R1', status: 400 });
     if (!hotel) throw Object.assign(new Error('Hotel not found.'), { rule: 'R1', status: 400 });
     if (body.adults < 1) throw Object.assign(new Error('At least one adult is required.'), { rule: 'R1', status: 400 });
-    if (body.pickup) {
-      const diffMins = (new Date(body.pickup) - new Date(flight.arrival_local)) / 60000;
-      if (diffMins < 60) throw Object.assign(new Error(`Pickup must be at least 60 minutes after landing.`), { rule: 'R2', status: 400 });
+    if (body.pickup_time) {
+      const diffMins = (new Date(body.pickup_time) - new Date(flight.arrival_local)) / 60000;
+      if (diffMins < 60) throw Object.assign(new Error('Pickup must be at least 60 minutes after landing.'), { rule: 'R2', status: 400 });
     }
     const route = MOCK_ROUTES.find((r) => r.airport === flight.to && r.city === hotel.city && r.area === hotel.area);
     if (!route) throw Object.assign(new Error('No route found between this airport and hotel.'), { rule: 'R1', status: 400 });
     if (body.price_inr < route.price_min_inr || body.price_inr > route.price_max_inr) {
       throw Object.assign(new Error(`Price must be between ₹${route.price_min_inr} and ₹${route.price_max_inr}.`), { rule: 'R3', status: 400 });
     }
-    const pickupTime = body.pickup || (() => { const d = new Date(flight.arrival_local); d.setMinutes(d.getMinutes() + 60); return d.toISOString().slice(0, 19); })();
+    const pickupTime = body.pickup_time || (() => { const d = new Date(flight.arrival_local); d.setMinutes(d.getMinutes() + 60); return d.toISOString().slice(0, 19); })();
     const newRequest = {
       request_id: `REQ-${String(mockRequests.length + 1).padStart(4, '0')}`,
       traveler_name: body.traveler_name,
@@ -379,20 +374,22 @@ function mockResponse(path, options = {}) {
   throw new Error(`Mock: unhandled route ${method} ${path}`);
 }
 
-const USE_MOCK = true; // Set to false when backend is running
+// ─── Config ───────────────────────────────────────────────────────────────────
+export const USE_MOCK = false; // Set to true to use in-memory mock instead of backend
 
+// ─── Core fetch ──────────────────────────────────────────────────────────────
 export async function apiFetch(path, options = {}) {
   if (USE_MOCK) {
     return mockResponse(path, options);
   }
 
-  let res = null;
+  let res;
   try {
     res = await fetch(`${BASE_URL}${path}`, {
       headers: { 'Content-Type': 'application/json' },
       ...options,
     });
-  } catch (err) {
+  } catch {
     throw new Error('Backend is not reachable. Start the Spring Boot server on port 8080.');
   }
 
@@ -400,13 +397,13 @@ export async function apiFetch(path, options = {}) {
   try {
     const text = await res.text();
     data = text ? JSON.parse(text) : null;
-  } catch (err) {
+  } catch {
     throw new Error('Invalid response from server.');
   }
 
   if (!res.ok) {
     const error = new Error(data?.message || `Request failed (${res.status})`);
-    error.rule = data?.rule || null;
+    error.rule = data?.rule ?? null;
     error.status = res.status;
     throw error;
   }

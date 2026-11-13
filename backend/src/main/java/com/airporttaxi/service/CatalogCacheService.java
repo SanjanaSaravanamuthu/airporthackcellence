@@ -209,6 +209,17 @@ public class CatalogCacheService {
         return Collections.unmodifiableCollection(hotelMap.values());
     }
 
+    public List<HotelDto> getHotelsByAirport(String airportCode) {
+        AirportDto airport = airportMap.get(airportCode.toUpperCase());
+        if (airport == null) return List.of();
+        List<String> cities = (airport.getServesCities() != null && !airport.getServesCities().isEmpty())
+                ? airport.getServesCities()
+                : List.of(airport.getCity());
+        return hotelMap.values().stream()
+                .filter(h -> cities.stream().anyMatch(c -> c.equalsIgnoreCase(h.getCity())))
+                .toList();
+    }
+
     public Collection<FlightDto> getAllFlights() {
         return Collections.unmodifiableCollection(flightMap.values());
     }

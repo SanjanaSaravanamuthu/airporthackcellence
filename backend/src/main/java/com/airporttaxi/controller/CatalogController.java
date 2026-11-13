@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/catalog")
@@ -27,6 +28,14 @@ public class CatalogController {
     @GetMapping("/hotels")
     public ResponseEntity<Collection<HotelDto>> getHotels() {
         return ResponseEntity.ok(catalogCacheService.getAllHotels());
+    }
+
+    @GetMapping("/hotels/by-airport/{airportCode}")
+    public ResponseEntity<List<HotelDto>> getHotelsByAirport(@PathVariable String airportCode) {
+        if (catalogCacheService.findAirport(airportCode).isEmpty()) {
+            throw new RuleViolationException("R1", "Airport '" + airportCode + "' not found");
+        }
+        return ResponseEntity.ok(catalogCacheService.getHotelsByAirport(airportCode));
     }
 
     @GetMapping("/flights")

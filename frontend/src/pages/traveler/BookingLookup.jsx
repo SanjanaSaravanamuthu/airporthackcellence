@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { getBookingByNumber } from '../../api/bookings';
+import { enrichBooking } from '../../api/enrichBooking';
 import BookingSummary from './BookingSummary';
 import './BookingLookup.css';
 
@@ -18,8 +19,8 @@ export default function BookingLookup() {
     setError('');
     setBooking(null);
     try {
-      const result = await getBookingByNumber(input.trim());
-      setBooking(result);
+      const raw = await getBookingByNumber(input.trim());
+      setBooking(await enrichBooking(raw));
     } catch (err) {
       if (err.status === 404) {
         setError('Booking not found. Please check your booking number.');

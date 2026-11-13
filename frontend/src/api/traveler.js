@@ -1,10 +1,7 @@
 import { apiFetch } from './client';
 
 export const submitRideRequest = (payload) =>
-  apiFetch('/traveler/requests', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
+  apiFetch('/traveler/requests', { method: 'POST', body: JSON.stringify(payload) });
 
 export const getRequest = (requestId) =>
   apiFetch(`/traveler/requests/${requestId}`);
@@ -15,5 +12,5 @@ export const getOffers = (requestId) =>
 export const bookOffer = (offerId) =>
   apiFetch(`/traveler/offers/${offerId}/book`, { method: 'POST' });
 
-export const declineOffer = (offerId) =>
-  apiFetch(`/traveler/offers/${offerId}/decline`, { method: 'POST' });
+export const rejectOffer = (offerId) =>
+  apiFetch(`/traveler/offers/${offerId}/reject`, { method: 'POST' });

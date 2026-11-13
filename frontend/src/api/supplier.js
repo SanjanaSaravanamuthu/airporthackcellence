@@ -8,6 +8,9 @@ export const getSupplierOpenRequests = (companyId) =>
 export const submitOffer = (payload) =>
   apiFetch('/suppliers/offers', { method: 'POST', body: JSON.stringify(payload) });
 
+export const getSupplierOffers = (companyId) =>
+  apiFetch(`/suppliers/${encodeURIComponent(companyId)}/offers`);
+
 export const getSupplierChangeRequests = (companyId) =>
   apiFetch(`/suppliers/${encodeURIComponent(companyId)}/change-requests`);
 

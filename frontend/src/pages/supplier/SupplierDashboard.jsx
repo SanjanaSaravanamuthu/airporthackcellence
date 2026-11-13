@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getSupplierOpenRequests } from '../../api/supplier';
+import { getSupplierOpenRequests, getSupplierOffers } from '../../api/supplier';
 import AssignCarModal from './AssignCarModal';
 import ChangeRequestsPanel from './ChangeRequestsPanel';
 import './SupplierDashboard.css';
@@ -86,8 +86,14 @@ export default function SupplierDashboard({ company }) {
     if (!company) return;
     setLoading(true);
     setError('');
-    getSupplierOpenRequests(company.company_id)
-      .then(setRequests)
+    Promise.all([
+      getSupplierOpenRequests(company.company_id),
+      getSupplierOffers(company.company_id),
+    ])
+      .then(([openRequests, myOffers]) => {
+        const offeredRequestIds = new Set(myOffers.map((o) => o.request_id));
+        setRequests(openRequests.filter((r) => !offeredRequestIds.has(r.request.request_id)));
+      })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   };

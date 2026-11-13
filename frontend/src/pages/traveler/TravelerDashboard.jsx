@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import RideRequestForm from './RideRequestForm';
 import BookingSummary from './BookingSummary';
 import { getOffers, bookOffer } from '../../api/traveler';
+import { enrichBooking } from '../../api/enrichBooking';
 import './TravelerDashboard.css';
 
 function formatDateTime(iso) {
@@ -28,8 +29,8 @@ function OffersPanel({ request, onBooked }) {
     setBookingError('');
     setBookingId(offerId);
     try {
-      const booking = await bookOffer(offerId);
-      onBooked(booking);
+      const raw = await bookOffer(offerId);
+      onBooked(await enrichBooking(raw));
     } catch (e) {
       setBookingError(e.message);
       setBookingId(null);
