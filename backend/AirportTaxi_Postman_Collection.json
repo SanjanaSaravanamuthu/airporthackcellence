@@ -1,0 +1,831 @@
+{
+  "info": {
+    "_postman_id": "a749be81-9ab0-457c-b959-c2e7bc99cefa",
+    "name": "Airport Taxi Platform - API Validation (R1-R9, M1-M7)",
+    "description": "Comprehensive Postman test collection validating all business rules (R1-R9) and mandatory features (M1-M7) for the Airport Taxi Ride Offers platform.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "requestId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "sakuraOfferId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "edoOfferId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "bookingNumber",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "bookingId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "changeRequestId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "secondRequestId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "competingOfferId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Catalog API (O(1) Cache Verification)",
+      "item": [
+        {
+          "name": "GET Flights",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/catalog/flights",
+              "host": ["{{baseUrl}}"],
+              "path": ["catalog", "flights"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET Hotels",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/catalog/hotels",
+              "host": ["{{baseUrl}}"],
+              "path": ["catalog", "hotels"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET Airports",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/catalog/airports",
+              "host": ["{{baseUrl}}"],
+              "path": ["catalog", "airports"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET Route Price Range (NRT to Tokyo Ueno)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Route details match catalog (R3)\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.drive_minutes).to.eql(90);",
+                  "    pm.expect(json.price_min_inr).to.eql(10200);",
+                  "    pm.expect(json.price_max_inr).to.eql(16800);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/catalog/routes/lookup?airport=NRT&city=Tokyo&area=Ueno",
+              "host": ["{{baseUrl}}"],
+              "path": ["catalog", "routes", "lookup"],
+              "query": [
+                { "key": "airport", "value": "NRT" },
+                { "key": "city", "value": "Tokyo" },
+                { "key": "area", "value": "Ueno" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET Taxi Companies",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/catalog/companies",
+              "host": ["{{baseUrl}}"],
+              "path": ["catalog", "companies"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Traveler Requests (M1, R1, R2, R3)",
+      "item": [
+        {
+          "name": "VALID: Create Menon Family Request",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "var json = pm.response.json();",
+                  "pm.test(\"Request is OPEN\", function () {",
+                  "    pm.expect(json.status).to.eql('OPEN');",
+                  "});",
+                  "pm.collectionVariables.set(\"requestId\", json.request_id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"traveler_name\": \"Menon family\",\n  \"flight_id\": \"FL-401\",\n  \"hotel_id\": \"HTL-TYO-004\",\n  \"adults\": 2,\n  \"child_ages\": [6],\n  \"large_bags\": 3,\n  \"small_bags\": 2,\n  \"pickup\": \"2027-04-10T11:30:00\",\n  \"car_type\": null,\n  \"price_inr\": 12000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/traveler/requests",
+              "host": ["{{baseUrl}}"],
+              "path": ["traveler", "requests"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "INVALID (R1): Unknown Flight ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 404 (or 400)\", function () {",
+                  "    pm.expect([400, 404]).to.include(pm.response.code);",
+                  "});",
+                  "pm.test(\"Rule code is R1 or NOT_FOUND\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(['R1', 'NOT_FOUND']).to.include(json.rule);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"traveler_name\": \"Invalid Flight Traveler\",\n  \"flight_id\": \"FL-9999\",\n  \"hotel_id\": \"HTL-TYO-004\",\n  \"adults\": 2,\n  \"child_ages\": [],\n  \"large_bags\": 1,\n  \"small_bags\": 1,\n  \"pickup\": \"2027-04-10T11:30:00\",\n  \"car_type\": null,\n  \"price_inr\": 12000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/traveler/requests",
+              "host": ["{{baseUrl}}"],
+              "path": ["traveler", "requests"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "INVALID (R2): Pickup Time < 60 mins After Landing",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test(\"Rule code is R2\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.rule).to.eql('R2');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"traveler_name\": \"Early Pickup Traveler\",\n  \"flight_id\": \"FL-401\",\n  \"hotel_id\": \"HTL-TYO-004\",\n  \"adults\": 2,\n  \"child_ages\": [],\n  \"large_bags\": 1,\n  \"small_bags\": 1,\n  \"pickup\": \"2027-04-10T10:45:00\",\n  \"car_type\": null,\n  \"price_inr\": 12000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/traveler/requests",
+              "host": ["{{baseUrl}}"],
+              "path": ["traveler", "requests"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "INVALID (R3): Price Below Route Minimum (5000 < 10200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test(\"Rule code is R3\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.rule).to.eql('R3');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"traveler_name\": \"Cheap Price Traveler\",\n  \"flight_id\": \"FL-401\",\n  \"hotel_id\": \"HTL-TYO-004\",\n  \"adults\": 2,\n  \"child_ages\": [],\n  \"large_bags\": 1,\n  \"small_bags\": 1,\n  \"pickup\": \"2027-04-10T11:30:00\",\n  \"car_type\": null,\n  \"price_inr\": 5000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/traveler/requests",
+              "host": ["{{baseUrl}}"],
+              "path": ["traveler", "requests"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Supplier Dashboard (M2, R4)",
+      "item": [
+        {
+          "name": "GET Sakura Cabs Eligible Requests",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Menon request is visible on dashboard\", function () {",
+                  "    var list = pm.response.json();",
+                  "    var reqId = pm.collectionVariables.get(\"requestId\");",
+                  "    var found = list.some(function(item) {",
+                  "        return item.request.request_id === reqId;",
+                  "    });",
+                  "    pm.expect(found).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/suppliers/TX-JP-01/open-requests",
+              "host": ["{{baseUrl}}"],
+              "path": ["suppliers", "TX-JP-01", "open-requests"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Supplier Offers (M3, R5, R6, R7)",
+      "item": [
+        {
+          "name": "INVALID (R5): Assign Car SC-1 (2 Large Bags < 3 Required)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test(\"Rule code is R5\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.rule).to.eql('R5');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"request_id\": \"{{requestId}}\",\n  \"company_id\": \"TX-JP-01\",\n  \"vehicle_id\": \"SC-1\",\n  \"offered_price_inr\": 12000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/suppliers/offers",
+              "host": ["{{baseUrl}}"],
+              "path": ["suppliers", "offers"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "INVALID (R7): Offered Price Above Max (20000 > 16800)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test(\"Rule code is R7\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.rule).to.eql('R7');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"request_id\": \"{{requestId}}\",\n  \"company_id\": \"TX-JP-01\",\n  \"vehicle_id\": \"SC-3\",\n  \"offered_price_inr\": 20000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/suppliers/offers",
+              "host": ["{{baseUrl}}"],
+              "path": ["suppliers", "offers"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "VALID: Sakura Cabs Assigns SUV SC-3 at 12500 INR",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "var json = pm.response.json();",
+                  "pm.test(\"Offer is OPEN\", function () {",
+                  "    pm.expect(json.status).to.eql('OPEN');",
+                  "});",
+                  "pm.collectionVariables.set(\"sakuraOfferId\", json.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"request_id\": \"{{requestId}}\",\n  \"company_id\": \"TX-JP-01\",\n  \"vehicle_id\": \"SC-3\",\n  \"offered_price_inr\": 12500\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/suppliers/offers",
+              "host": ["{{baseUrl}}"],
+              "path": ["suppliers", "offers"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "VALID: Edo Premium Cars Assigns SUV EP-3 at 14000 INR",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "var json = pm.response.json();",
+                  "pm.collectionVariables.set(\"edoOfferId\", json.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"request_id\": \"{{requestId}}\",\n  \"company_id\": \"TX-JP-03\",\n  \"vehicle_id\": \"EP-3\",\n  \"offered_price_inr\": 14000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/suppliers/offers",
+              "host": ["{{baseUrl}}"],
+              "path": ["suppliers", "offers"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "5. Booking Engine (M4, M5, M6, R8)",
+      "item": [
+        {
+          "name": "GET Offers for Menon Request",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var list = pm.response.json();",
+                  "pm.test(\"Contains at least 2 offers\", function () {",
+                  "    pm.expect(list.length).to.be.at.least(2);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/traveler/requests/{{requestId}}/offers",
+              "host": ["{{baseUrl}}"],
+              "path": ["traveler", "requests", "{{requestId}}", "offers"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "REJECT Offer (Edo Premium Cars)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var json = pm.response.json();",
+                  "pm.test(\"Status is REJECTED\", function () {",
+                  "    pm.expect(json.status).to.eql('REJECTED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/traveler/offers/{{edoOfferId}}/reject",
+              "host": ["{{baseUrl}}"],
+              "path": ["traveler", "offers", "{{edoOfferId}}", "reject"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "BOOK Offer (Sakura Cabs SC-3)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var json = pm.response.json();",
+                  "pm.test(\"Booking confirmed\", function () {",
+                  "    pm.expect(json.status).to.eql('CONFIRMED');",
+                  "    pm.expect(json.booking_number).to.match(/^\\d{10}$/);",
+                  "});",
+                  "pm.collectionVariables.set(\"bookingNumber\", json.booking_number);",
+                  "pm.collectionVariables.set(\"bookingId\", json.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/traveler/offers/{{sakuraOfferId}}/book",
+              "host": ["{{baseUrl}}"],
+              "path": ["traveler", "offers", "{{sakuraOfferId}}", "book"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET Booking Summary by 10-Digit Number (M5)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var json = pm.response.json();",
+                  "pm.test(\"Summary details match\", function () {",
+                  "    pm.expect(json.car_id).to.eql('SC-3');",
+                  "    pm.expect(json.price_inr).to.eql(12500);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/bookings/by-number/{{bookingNumber}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["bookings", "by-number", "{{bookingNumber}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "SETUP: Create 2nd Overlapping Request for M6 Overlap Test",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "var json = pm.response.json();",
+                  "pm.collectionVariables.set(\"secondRequestId\", json.request_id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"traveler_name\": \"Second Traveler\",\n  \"flight_id\": \"FL-401\",\n  \"hotel_id\": \"HTL-TYO-004\",\n  \"adults\": 1,\n  \"child_ages\": [],\n  \"large_bags\": 1,\n  \"small_bags\": 1,\n  \"pickup\": \"2027-04-10T12:00:00\",\n  \"car_type\": null,\n  \"price_inr\": 12000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/traveler/requests",
+              "host": ["{{baseUrl}}"],
+              "path": ["traveler", "requests"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "INVALID (R6 / M6): Attempt to Assign Busy Car SC-3 for Overlapping Window",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test(\"Rule code is R6 (car busy)\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.rule).to.eql('R6');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"request_id\": \"{{secondRequestId}}\",\n  \"company_id\": \"TX-JP-01\",\n  \"vehicle_id\": \"SC-3\",\n  \"offered_price_inr\": 12500\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/suppliers/offers",
+              "host": ["{{baseUrl}}"],
+              "path": ["suppliers", "offers"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "6. Change Requests (M7, R9)",
+      "item": [
+        {
+          "name": "POST Traveler Change Request (New Pickup 12:00)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "var json = pm.response.json();",
+                  "pm.test(\"Status is PENDING\", function () {",
+                  "    pm.expect(json.status).to.eql('PENDING');",
+                  "});",
+                  "pm.collectionVariables.set(\"changeRequestId\", json.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"new_pickup_time\": \"2027-04-10T12:00:00\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/bookings/{{bookingId}}/change-requests",
+              "host": ["{{baseUrl}}"],
+              "path": ["bookings", "{{bookingId}}", "change-requests"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET Pending Change Requests for Sakura Cabs",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var list = pm.response.json();",
+                  "var chId = pm.collectionVariables.get(\"changeRequestId\");",
+                  "pm.test(\"Change request is in pending list\", function () {",
+                  "    var found = list.some(function(item) { return item.id == chId; });",
+                  "    pm.expect(found).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/suppliers/TX-JP-01/change-requests",
+              "host": ["{{baseUrl}}"],
+              "path": ["suppliers", "TX-JP-01", "change-requests"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH Supplier Accepts Change Request",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var json = pm.response.json();",
+                  "pm.test(\"Change request ACCEPTED\", function () {",
+                  "    pm.expect(json.status).to.eql('ACCEPTED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ACCEPTED\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/bookings/change-requests/{{changeRequestId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["bookings", "change-requests", "{{changeRequestId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "VERIFY: Booking Summary Updated With New Pickup and Busy Times",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var json = pm.response.json();",
+                  "pm.test(\"Pickup time updated to 12:00:00\", function () {",
+                  "    pm.expect(json.pickup_time).to.include('12:00:00');",
+                  "});",
+                  "pm.test(\"Busy end time recalculated to 15:00:00 (12:00 + 2*90m)\", function () {",
+                  "    pm.expect(json.busy_end_time).to.include('15:00:00');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/bookings/by-number/{{bookingNumber}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["bookings", "by-number", "{{bookingNumber}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
+
