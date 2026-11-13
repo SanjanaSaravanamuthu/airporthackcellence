@@ -1,0 +1,173 @@
+### ===================================================================
+### Airport Taxi Ride Offers Platform - Scenario 1 & 2 Demo
+### Menon Family (Traveler) & Sakura Cabs (Supplier) End-to-End Workflow
+### ===================================================================
+
+@baseUrl = http://localhost:8080/api/v1
+
+### -------------------------------------------------------------------
+### 1. TRAVELER FLOW (M1, R1, R2, R3)
+### Post Ride Request: Menon family landing at Narita (NRT), Hotel Ueno Garden Inn
+### 2 adults, 1 child (age 6), 3 large bags, 2 small bags, pickup 11:30, price ₹12,000
+### -------------------------------------------------------------------
+# @name createMenonRequest
+POST {{baseUrl}}/traveler/requests
+Content-Type: application/json
+
+{
+  "traveler_name": "Menon family",
+  "flight_id": "FL-401",
+  "hotel_id": "HTL-TYO-004",
+  "adults": 2,
+  "child_ages": [6],
+  "large_bags": 3,
+  "small_bags": 2,
+  "pickup": "2027-04-10T11:30:00",
+  "car_type": null,
+  "price_inr": 12000
+}
+
+### Store the created requestId from response above (e.g. REQ-XXXX)
+@requestId = {{createMenonRequest.response.body.request_id}}
+
+### View the posted ride request
+GET {{baseUrl}}/traveler/requests/{{requestId}}
+
+### -------------------------------------------------------------------
+### 2. SUPPLIER FLOW (M2, R4)
+### Sakura Cabs (TX-JP-01) checks open requests dashboard
+### Verified: Serves NRT, drives to Tokyo/Ueno, open at 11:30, car SC-3 fits & is free
+### -------------------------------------------------------------------
+GET {{baseUrl}}/suppliers/TX-JP-01/open-requests
+
+### -------------------------------------------------------------------
+### 3. SUPPLIER ERROR CASE A (M3, R5 Violation)
+### Sakura Cabs assigns vehicle SC-1 (SEDAN with only 2 large bags capacity)
+### EXPECTED: 400 Bad Request with rule "R5" - Vehicle capacity violation
+### -------------------------------------------------------------------
+POST {{baseUrl}}/suppliers/offers
+Content-Type: application/json
+
+{
+  "request_id": "{{requestId}}",
+  "company_id": "TX-JP-01",
+  "vehicle_id": "SC-1",
+  "offered_price_inr": 12000
+}
+
+### -------------------------------------------------------------------
+### 4. SUPPLIER ERROR CASE B (M3, R7 Violation)
+### Sakura Cabs assigns vehicle SC-3 with price ₹20,000 (Outside route range ₹10,200 - ₹16,800)
+### EXPECTED: 400 Bad Request with rule "R7" - Price range violation
+### -------------------------------------------------------------------
+POST {{baseUrl}}/suppliers/offers
+Content-Type: application/json
+
+{
+  "request_id": "{{requestId}}",
+  "company_id": "TX-JP-01",
+  "vehicle_id": "SC-3",
+  "offered_price_inr": 20000
+}
+
+### -------------------------------------------------------------------
+### 5. SUPPLIER VALID OFFER A (M3, R7)
+### Sakura Cabs assigns vehicle SC-3 (SUV, fits 6 seats & 4 large bags) at ₹12,500
+### -------------------------------------------------------------------
+# @name submitSakuraOffer
+POST {{baseUrl}}/suppliers/offers
+Content-Type: application/json
+
+{
+  "request_id": "{{requestId}}",
+  "company_id": "TX-JP-01",
+  "vehicle_id": "SC-3",
+  "offered_price_inr": 12500
+}
+
+@sakuraOfferId = {{submitSakuraOffer.response.body.id}}
+
+### -------------------------------------------------------------------
+### 6. SECOND SUPPLIER OFFER B (M3)
+### Edo Premium Cars (TX-JP-03) assigns vehicle EP-3 at ₹14,000
+### -------------------------------------------------------------------
+# @name submitEdoOffer
+POST {{baseUrl}}/suppliers/offers
+Content-Type: application/json
+
+{
+  "request_id": "{{requestId}}",
+  "company_id": "TX-JP-03",
+  "vehicle_id": "EP-3",
+  "offered_price_inr": 14000
+}
+
+@edoOfferId = {{submitEdoOffer.response.body.id}}
+
+### -------------------------------------------------------------------
+### 7. TRAVELER VIEWS OFFERS (M4)
+### Traveler sees taxis from both suppliers with car details and prices
+### -------------------------------------------------------------------
+GET {{baseUrl}}/traveler/requests/{{requestId}}/offers
+
+### -------------------------------------------------------------------
+### 8. TRAVELER REJECTS OFFER (R8)
+### Traveler rejects Edo Premium Cars offer
+### -------------------------------------------------------------------
+POST {{baseUrl}}/traveler/offers/{{edoOfferId}}/reject
+
+### -------------------------------------------------------------------
+### 9. TRAVELER BOOKS SAKURA CABS OFFER (M4, M6, R8)
+### Overlap check executed atomically in O(log N). Generates 10-digit booking number.
+### Other offers transition to NOT_CHOSEN.
+### -------------------------------------------------------------------
+# @name bookSakuraOffer
+POST {{baseUrl}}/traveler/offers/{{sakuraOfferId}}/book
+
+@bookingNumber = {{bookSakuraOffer.response.body.booking_number}}
+@bookingId = {{bookSakuraOffer.response.body.id}}
+
+### -------------------------------------------------------------------
+### 10. BOOKING SUMMARY LOOKUP (M5)
+### Retrieve booking summary via the 10-digit booking number
+### -------------------------------------------------------------------
+GET {{baseUrl}}/bookings/by-number/{{bookingNumber}}
+
+### -------------------------------------------------------------------
+### 11. TRAVELER CHANGE REQUEST (M7, R9)
+### Traveler submits change request for later pickup: 2027-04-10T12:00:00
+### -------------------------------------------------------------------
+# @name submitChangeReq
+POST {{baseUrl}}/bookings/{{bookingId}}/change-requests
+Content-Type: application/json
+
+{
+  "new_pickup_time": "2027-04-10T12:00:00"
+}
+
+@changeRequestId = {{submitChangeReq.response.body.id}}
+
+### -------------------------------------------------------------------
+### 12. SUPPLIER VIEWS PENDING CHANGE REQUESTS (M7)
+### Sakura Cabs reviews pending change requests for their bookings
+### -------------------------------------------------------------------
+GET {{baseUrl}}/suppliers/TX-JP-01/change-requests
+
+### -------------------------------------------------------------------
+### 13. SUPPLIER ACCEPTS CHANGE REQUEST (M7, R9)
+### Overlap query checks availability excluding current bookingId.
+### Recalculates busy interval (12:00 to 15:00).
+### -------------------------------------------------------------------
+PATCH {{baseUrl}}/bookings/change-requests/{{changeRequestId}}
+Content-Type: application/json
+
+{
+  "status": "ACCEPTED"
+}
+
+### -------------------------------------------------------------------
+### 14. VERIFY UPDATED BOOKING SUMMARY (M5, M7)
+### Confirm pickup updated to 12:00 and busyEndTime updated to 15:00
+### -------------------------------------------------------------------
+GET {{baseUrl}}/bookings/by-number/{{bookingNumber}}
+
